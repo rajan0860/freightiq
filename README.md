@@ -57,6 +57,8 @@ python scripts/train_model.py
 streamlit run src/dashboard/app.py
 ```
 
+> **Note:** The `streamlit run` command must be run from the project root so that relative imports and data paths resolve correctly.
+
 > See [Getting Started](#getting-started) for the full step-by-step walkthrough.
 
 ---
@@ -527,9 +529,13 @@ This system directly addresses three of the most costly problems in supply chain
 
 Contributions are welcome! Please:
 
-1. Open an issue to discuss your proposed change
-2. Fork the repo and create a feature branch
-3. Submit a pull request with a clear description
+1. **Open an issue** to discuss your proposed change before starting work
+2. **Fork the repo** and create a feature branch (`feature/your-feature-name`)
+3. **Follow existing code style** — use type hints, docstrings, and keep modules focused
+4. **Add or update tests** for any new functionality in `tests/`
+5. **Submit a pull request** with a clear description of what changed and why
+
+> For larger changes (new modules, architectural updates), please open a discussion issue first so we can align on approach.
 
 ---
 
@@ -544,6 +550,16 @@ Built by **Rajan Mehta** as a portfolio project demonstrating end-to-end AI engi
 
 ---
 
+## Version
+
+`v1.0.0` — Initial release with RAG pipeline, XGBoost risk scoring, LangGraph agent, FastAPI backend, and Streamlit dashboard.
+
+---
+
 ## License
 
 MIT License — free to use, adapt, and build on.
+
+---
+
+⭐ **If you found this project useful or interesting, please consider starring the repo — it helps with visibility and motivates continued development!**
