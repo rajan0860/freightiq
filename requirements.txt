@@ -1,0 +1,36 @@
+# === LLM & RAG ===
+langchain>=0.2.0
+langchain-ollama>=0.1.0
+langchain-community>=0.2.0
+chromadb>=0.5.0
+
+# === ML ===
+xgboost>=2.0.0
+scikit-learn>=1.4.0
+shap>=0.45.0
+pandas>=2.2.0
+numpy>=1.26.0
+
+# === Data ingestion ===
+pdfplumber>=0.11.0
+pypdf>=4.0.0
+
+# === Data feeds ===
+requests>=2.31.0
+newsapi-python>=0.2.7
+
+# === Data generation ===
+faker>=24.0.0
+
+# === API ===
+fastapi>=0.111.0
+uvicorn>=0.29.0
+pydantic>=2.7.0
+
+# === Dashboard ===
+streamlit>=1.35.0
+plotly>=5.22.0
+
+# === Utilities ===
+python-dotenv>=1.0.0
+schedule>=1.2.0

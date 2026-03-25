@@ -2,7 +2,7 @@
 
 **AI-powered supply chain disruption detection, shipment risk scoring, and automated alerts**
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white) ![LangChain](https://img.shields.io/badge/LangChain-0.2+-1C3C3C?logo=langchain&logoColor=white) ![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-orange) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?logo=streamlit&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white) ![LangChain](https://img.shields.io/badge/LangChain-0.2+-1C3C3C?logo=langchain&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-Local_AI-white?logo=ollama) ![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-orange) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?logo=streamlit&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
@@ -35,6 +35,7 @@ FreightIQ is an agentic AI system that:
 - **Retrieves** relevant historical context using a RAG pipeline over your shipment and disruption knowledge base
 - **Scores** each affected shipment for delay/disruption risk using a trained XGBoost model
 - **Generates** structured alerts with recommended actions per shipment
+- **Secures** your data through 100% local, on-premise AI inference via Ollama (no proprietary shipment data ever leaves your network)
 - **Displays** everything on a live Streamlit dashboard with natural language querying
 
 > Demo prompt: *"Port of Rotterdam strike reported — which of our shipments are at risk and what should we do?"*
@@ -127,7 +128,7 @@ flowchart TB
 | Language | Python 3.10+ |
 | RAG / Agents | LangChain, LangGraph |
 | Vector store | ChromaDB |
-| LLM | OpenAI GPT-4o / Claude 3.5 Sonnet |
+| LLM | Ollama (qwen2.5:7b-instruct local) |
 | ML scoring | XGBoost, scikit-learn, SHAP |
 | Data feeds | NewsAPI, OpenWeatherMap API |
 | Data generation | Faker, pandas |
@@ -151,6 +152,9 @@ freightiq/
 │   └── models/                     # Saved XGBoost model artifacts
 │
 ├── src/
+│   ├── llm/
+│   │   └── llm_client.py            # Ollama LLM + embedding abstraction
+│   │
 │   ├── ingestion/
 │   │   ├── news_fetcher.py         # NewsAPI integration
 │   │   ├── weather_fetcher.py      # OpenWeatherMap integration
@@ -220,7 +224,8 @@ freightiq/
 ### Prerequisites
 
 - Python 3.10+
-- An [OpenAI API key](https://platform.openai.com) (~$10 credit covers full development)
+- [Ollama](https://ollama.com) installed locally (free, runs on your machine)
+- Minimum hardware: 8GB+ RAM recommended to comfortably run local 7B AI models (Apple Silicon Macs or dedicated GPUs perform best)
 - A free [NewsAPI key](https://newsapi.org)
 - A free [OpenWeatherMap API key](https://openweathermap.org/api)
 
@@ -245,15 +250,23 @@ venv\Scripts\activate           # Windows
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+### 4. Pull Ollama models
+
+```bash
+brew install ollama              # macOS (or download from https://ollama.com)
+ollama pull qwen2.5:7b-instruct  # LLM (~4.7 GB)
+ollama pull nomic-embed-text     # Embeddings (~274 MB)
+```
+
+### 5. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and add your keys (see [Configuration](#configuration) for all available options).
+Edit `.env` and add your NewsAPI / OpenWeatherMap keys (see [Configuration](#configuration)). No LLM API key needed — Ollama runs locally.
 
-### 5. Generate synthetic data
+### 6. Generate synthetic data
 
 ```bash
 python scripts/generate_data.py
@@ -261,7 +274,7 @@ python scripts/generate_data.py
 
 Creates 100 synthetic shipment records and 50 historical disruption events in `data/synthetic/`.
 
-### 6. Train the risk scoring model
+### 7. Train the risk scoring model
 
 ```bash
 python scripts/train_model.py
@@ -269,7 +282,7 @@ python scripts/train_model.py
 
 Saves the trained XGBoost model to `data/models/xgboost_risk.json`.
 
-### 7. Run the ingestion pipeline
+### 8. Run the ingestion pipeline
 
 ```bash
 python scripts/ingest_and_run.py
@@ -277,7 +290,7 @@ python scripts/ingest_and_run.py
 
 Fetches live news + weather, embeds documents into ChromaDB, and runs the agent.
 
-### 8. Start the backend API
+### 9. Start the backend API
 
 ```bash
 uvicorn src.api.main:app --reload --port 8000
@@ -285,7 +298,7 @@ uvicorn src.api.main:app --reload --port 8000
 
 API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### 9. Launch the Streamlit dashboard
+### 10. Launch the Streamlit dashboard
 
 ```bash
 streamlit run src/dashboard/app.py
@@ -418,6 +431,15 @@ python scripts/generate_data.py --shipments 100 --disruptions 50 --output data/s
 
 ## Deployment
 
+### Deployment Notes for Local AI
+
+> [!WARNING]
+> Because FreightIQ relies on a 4.7GB local LLM (`qwen2.5:7b-instruct`) via Ollama, it cannot be run purely on the free tiers of services like Render or Hugging Face Spaces (which typically provide 1-2GB of RAM).
+>
+> To deploy this application to the cloud, you will need either:
+> 1. A VPS or cloud instance with at least 8GB of RAM and/or a dedicated GPU.
+> 2. To point the application to an external hosted LLM API (by updating the `llm_client.py` and environment configuration) if you prefer not to host the model yourself.
+
 ### Docker (local)
 
 ```bash
@@ -429,27 +451,6 @@ Services started:
 - **Streamlit dashboard:** `http://localhost:8501`
 - **ChromaDB:** persistent volume at `./data/chroma`
 
-### Hugging Face Spaces (free)
-
-1. Create a new Space at [huggingface.co/spaces](https://huggingface.co/spaces)
-2. Select **Streamlit** as the SDK
-3. Push your code:
-
-```bash
-git remote add hf https://huggingface.co/spaces/<your-username>/freightiq
-git push hf main
-```
-
-4. Add your API keys as Space secrets in the HF settings panel
-
-### Render (FastAPI backend, free tier)
-
-1. Connect your GitHub repo to [render.com](https://render.com)
-2. Create a new **Web Service**
-3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `uvicorn src.api.main:app --host 0.0.0.0 --port 8000`
-5. Add environment variables in Render dashboard
-
 ---
 
 ## Configuration
@@ -457,8 +458,10 @@ git push hf main
 All configuration is via environment variables. Copy `.env.example` to `.env` before running:
 
 ```env
-# LLM
-OPENAI_API_KEY=sk-...
+# LLM (Ollama — local, no API key needed)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
+OLLAMA_EMBED_MODEL=nomic-embed-text
 
 # Data feeds
 NEWSAPI_KEY=your_newsapi_key_here
@@ -488,7 +491,8 @@ API_PORT=8000
 | Problem | Solution |
 |---|---|
 | `ChromaDB` errors on startup | Ensure `CHROMA_PERSIST_DIR` points to a writable directory. Delete `data/chroma/` to reset. |
-| `OPENAI_API_KEY` not found | Verify your `.env` file exists in the project root and contains valid keys. |
+| Ollama connection refused | Make sure Ollama is running (`ollama serve` or open the Ollama app). Check with `curl http://localhost:11434/api/tags`. |
+| Model not found | Pull the required models: `ollama pull llama3.1:8b` and `ollama pull nomic-embed-text`. |
 | Streamlit won't connect to API | Make sure the FastAPI backend is running on port 8000 before launching the dashboard. |
 | `ModuleNotFoundError` | Ensure you've activated your virtual environment and run `pip install -r requirements.txt`. |
 | Stale news data | The ingestion pipeline runs every 30 min by default. Run `python scripts/ingest_and_run.py` for a manual refresh. |
@@ -511,7 +515,7 @@ API_PORT=8000
 
 ---
 
-## Business Value
+### Business Value
 
 This system directly addresses three of the most costly problems in supply chain management:
 
@@ -520,6 +524,8 @@ This system directly addresses three of the most costly problems in supply chain
 📡 **Information overload** — instead of monitoring dozens of news sources manually, the system surfaces only what matters to your specific shipment portfolio.
 
 💬 **Slow dispute resolution** — natural language querying means any team member can interrogate the system without writing SQL or waiting for a data analyst.
+
+🔒 **Data Security & Compliance** — by using local, on-premise AI models via Ollama, proprietary supply chain data remains strictly within your enterprise network, mitigating third-party API exposure risks.
 
 > *Typical ROI: A 5% reduction in delayed shipments on a portfolio of 500 monthly shipments, at $200 average re-handling cost, saves **$5,000/month**.*
 
