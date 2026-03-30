@@ -1,0 +1,47 @@
+# FreightIQ — Docker Compose
+# Starts FastAPI backend, Streamlit dashboard, and ChromaDB persistence
+
+version: "3.9"
+
+services:
+  # --- FastAPI Backend ---
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: freightiq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - CHROMA_PERSIST_DIR=/app/data/chroma
+      - MODEL_PATH=/app/data/models/xgboost_risk.json
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # --- Streamlit Dashboard ---
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: freightiq-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    environment:
+      - API_BASE_URL=http://api:8000
+    command: streamlit run src/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

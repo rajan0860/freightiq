@@ -41,8 +41,7 @@ FreightIQ is an agentic AI system that:
 > Demo prompt: *"Port of Rotterdam strike reported — which of our shipments are at risk and what should we do?"*
 > The system detects the event, retrieves related context, scores affected shipments, and outputs a ranked action list — automatically.
 
-<!-- TODO: Add a screenshot or GIF of the Streamlit dashboard here -->
-<!-- ![FreightIQ Dashboard](docs/images/dashboard_screenshot.png) -->
+![FreightIQ Dashboard](docs/images/dashboard_screenshot.png)
 
 ---
 
@@ -460,7 +459,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` be
 ```env
 # LLM (Ollama — local, no API key needed)
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.1:8b
+OLLAMA_MODEL=qwen2.5:7b-instruct
 OLLAMA_EMBED_MODEL=nomic-embed-text
 
 # Data feeds
@@ -492,10 +491,20 @@ API_PORT=8000
 |---|---|
 | `ChromaDB` errors on startup | Ensure `CHROMA_PERSIST_DIR` points to a writable directory. Delete `data/chroma/` to reset. |
 | Ollama connection refused | Make sure Ollama is running (`ollama serve` or open the Ollama app). Check with `curl http://localhost:11434/api/tags`. |
-| Model not found | Pull the required models: `ollama pull llama3.1:8b` and `ollama pull nomic-embed-text`. |
+| Model not found | Pull the required models: `ollama pull qwen2.5:7b-instruct` and `ollama pull nomic-embed-text`. |
 | Streamlit won't connect to API | Make sure the FastAPI backend is running on port 8000 before launching the dashboard. |
 | `ModuleNotFoundError` | Ensure you've activated your virtual environment and run `pip install -r requirements.txt`. |
 | Stale news data | The ingestion pipeline runs every 30 min by default. Run `python scripts/ingest_and_run.py` for a manual refresh. |
+
+---
+
+## Testing
+
+The project includes unit tests for the RAG pipeline, ML risk scorer, and LangGraph agent. To run the test suite:
+
+```bash
+pytest tests/
+```
 
 ---
 
@@ -515,7 +524,7 @@ API_PORT=8000
 
 ---
 
-### Business Value
+## Business Value
 
 This system directly addresses three of the most costly problems in supply chain management:
 
