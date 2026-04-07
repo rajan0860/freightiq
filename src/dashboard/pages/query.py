@@ -5,28 +5,48 @@ Natural Language Query page — ask questions about the supply chain knowledge b
 from __future__ import annotations
 
 import streamlit as st
+import os
 import requests
 
-API_BASE = "http://localhost:8000"
+API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000")
+
+
+def set_query(query_text: str):
+    """Callback to update query input and trigger search."""
+    st.session_state["query_input_box"] = query_text
+    st.session_state["trigger_search"] = True
 
 
 def render():
     st.header("💬 Ask FreightIQ")
     st.caption("Query the supply chain knowledge base in natural language.")
 
+    # Initialize session state
+    if "query_input_box" not in st.session_state:
+        st.session_state["query_input_box"] = ""
+    if "trigger_search" not in st.session_state:
+        st.session_state["trigger_search"] = False
+
     # Query input
     question = st.text_input(
         "Ask a question",
+        key="query_input_box",
         placeholder="e.g. Which Asia-Europe routes are most at risk this week?",
     )
 
-    if st.button("🔍 Search", use_container_width=False, disabled=not question):
+    # Trigger search if button clicked OR auto-trigger flag is set
+    search_clicked = st.button("🔍 Search", width="content", disabled=not question)
+    
+    if search_clicked or st.session_state["trigger_search"]:
+        # Reset the trigger flag
+        st.session_state["trigger_search"] = False
+        
         with st.spinner("Searching knowledge base..."):
             try:
                 resp = requests.post(
                     f"{API_BASE}/query",
                     json={"question": question},
-                    timeout=60,
+                    timeout=180,  # 3 minutes for NL query
                 )
                 if resp.ok:
                     data = resp.json()
@@ -41,6 +61,8 @@ def render():
                 else:
                     st.error(f"API error: {resp.status_code} — {resp.text}")
 
+            except requests.Timeout:
+                st.warning("⏱️ The search is taking longer than expected. Please try again or simplify your question.")
             except requests.ConnectionError:
                 st.error("Cannot connect to API. Is the FastAPI backend running?")
 
@@ -54,9 +76,7 @@ def render():
         "What is the weather risk at major Asian ports?",
     ]
     for ex in examples:
-        if st.button(ex, key=ex):
-            st.session_state["query_input"] = ex
-            st.rerun()
+        st.button(ex, key=f"btn_{ex}", on_click=set_query, args=(ex,))
 
 
 if __name__ == "__main__":

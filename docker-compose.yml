@@ -14,11 +14,13 @@ services:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+      - ./src:/app/src
       - ./.env:/app/.env:ro
     environment:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - CHROMA_PERSIST_DIR=/app/data/chroma
       - MODEL_PATH=/app/data/models/xgboost_risk.json
+      - PYTHONPATH=/app
     command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
     healthcheck:
@@ -37,9 +39,11 @@ services:
       - "8501:8501"
     volumes:
       - ./data:/app/data
+      - ./src:/app/src
       - ./.env:/app/.env:ro
     environment:
       - API_BASE_URL=http://api:8000
+      - PYTHONPATH=/app
     command: streamlit run src/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
     depends_on:
       api:

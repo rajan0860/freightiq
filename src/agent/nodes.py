@@ -25,9 +25,9 @@ from src.agent.state import AgentState, DisruptionEvent, ScoredShipment, Alert
 # Node 1: Detect
 # ---------------------------------------------------------------------------
 
-def detect_node(state: Dict[str, Any]) -> Dict[str, Any]:
+def detect_node(state: AgentState) -> Dict[str, Any]:
     """Analyse raw news + weather feeds and extract structured disruption events."""
-    raw_feeds = state.get("raw_feeds", [])
+    raw_feeds = state.raw_feeds
 
     if not raw_feeds:
         return {"events": [], "error": None}
@@ -70,9 +70,9 @@ def detect_node(state: Dict[str, Any]) -> Dict[str, Any]:
 # Node 2: Retrieve
 # ---------------------------------------------------------------------------
 
-def retrieve_node(state: Dict[str, Any]) -> Dict[str, Any]:
+def retrieve_node(state: AgentState) -> Dict[str, Any]:
     """Retrieve relevant historical context from ChromaDB for detected events."""
-    events = state.get("events", [])
+    events = state.events
 
     if not events:
         return {"context": "No events detected — no context to retrieve."}
@@ -101,9 +101,9 @@ def retrieve_node(state: Dict[str, Any]) -> Dict[str, Any]:
 # Node 2.5: Score Shipments (runs between retrieve and recommend)
 # ---------------------------------------------------------------------------
 
-def score_node(state: Dict[str, Any]) -> Dict[str, Any]:
+def score_node(state: AgentState) -> Dict[str, Any]:
     """Score the current shipments using the XGBoost risk model."""
-    shipments = state.get("shipments", [])
+    shipments = state.shipments
 
     if not shipments:
         return {"scored_shipments": []}
@@ -143,11 +143,11 @@ def score_node(state: Dict[str, Any]) -> Dict[str, Any]:
 # Node 3: Recommend
 # ---------------------------------------------------------------------------
 
-def recommend_node(state: Dict[str, Any]) -> Dict[str, Any]:
+def recommend_node(state: AgentState) -> Dict[str, Any]:
     """Generate actionable alerts using the LLM given events, context, and scores."""
-    events = state.get("events", [])
-    context = state.get("context", "")
-    scored_shipments = state.get("scored_shipments", [])
+    events = state.events
+    context = state.context
+    scored_shipments = state.scored_shipments
 
     if not events:
         return {"alerts": []}

@@ -5,11 +5,11 @@ Alerts page — live disruption alert feed.
 from __future__ import annotations
 
 import streamlit as st
+import os
 import requests
-
 from src.dashboard.components import severity_badge
 
-API_BASE = "http://localhost:8000"
+API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 
 def render():
@@ -19,10 +19,11 @@ def render():
     # Trigger ingest button
     col1, col2 = st.columns([3, 1])
     with col2:
-        if st.button("🔄 Run Agent", use_container_width=True):
+        if st.button("🔄 Run Agent", width="stretch"):
             with st.spinner("Running ingestion + agent pipeline..."):
                 try:
-                    resp = requests.post(f"{API_BASE}/ingest", timeout=120)
+                    # Bump timeout to 5 minutes for heavy agent + ingestion work
+                    resp = requests.post(f"{API_BASE}/ingest", timeout=300)
                     if resp.ok:
                         data = resp.json()
                         st.success(
@@ -31,6 +32,8 @@ def render():
                         )
                     else:
                         st.error(f"API error: {resp.status_code}")
+                except requests.Timeout:
+                    st.warning("⏱️ Request timed out. The agent is still running in the background. Please refresh in a minute.")
                 except requests.ConnectionError:
                     st.error("Cannot connect to API. Is the FastAPI backend running on port 8000?")
 

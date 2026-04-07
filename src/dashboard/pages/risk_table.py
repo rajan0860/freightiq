@@ -5,12 +5,13 @@ Risk Table page — shipments ranked by disruption risk.
 from __future__ import annotations
 
 import streamlit as st
+import os
 import requests
 import pandas as pd
 
 from src.dashboard.components import severity_badge
 
-API_BASE = "http://localhost:8000"
+API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 
 def render():
@@ -69,7 +70,7 @@ def render():
     # Display table
     st.dataframe(
         filtered[["shipment_id", "route", "carrier", "region", "risk_score", "risk_level", "explanation"]],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "risk_score": st.column_config.ProgressColumn(

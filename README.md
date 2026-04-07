@@ -271,7 +271,7 @@ Edit `.env` and add your NewsAPI / OpenWeatherMap keys (see [Configuration](#con
 python scripts/generate_data.py
 ```
 
-Creates 100 synthetic shipment records and 50 historical disruption events in `data/synthetic/`.
+Creates 1,000 synthetic shipment records and 50 historical disruption events in `data/synthetic/`.
 
 ### 7. Train the risk scoring model
 
@@ -332,7 +332,7 @@ Scores each shipment on a 0–1 delay probability scale. SHAP values provide hum
 ```python
 from src.ml.scorer import RiskScorer
 
-scorer = RiskScorer.load("data/models/xgboost_risk.json")
+scorer = RiskScorer("data/models/xgboost_risk.json")
 
 result = scorer.score({
     "route": "Shanghai → Rotterdam",
@@ -347,7 +347,7 @@ result = scorer.score({
 
 ### LangGraph Agent
 
-A three-node agent (Detect → Retrieve → Recommend) that runs on a schedule and produces structured alerts.
+A four-node agent (Detect → Retrieve → Score → Recommend) that runs on a schedule and produces structured alerts.
 
 ```python
 from src.agent.graph import DisruptionAgent

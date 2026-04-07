@@ -5,11 +5,12 @@ Region Map page — geographic view of disruption risk by region.
 from __future__ import annotations
 
 import streamlit as st
+import os
 import requests
 import pandas as pd
 import plotly.express as px
 
-API_BASE = "http://localhost:8000"
+API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 # Approximate center coordinates for each region
 REGION_COORDS = {
@@ -84,7 +85,7 @@ def render():
         height=500,
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Summary table
     st.subheader("Region Summary")
@@ -97,7 +98,7 @@ def render():
                 "high_risk_count": "High Risk",
             }
         ),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
