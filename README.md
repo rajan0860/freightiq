@@ -1,6 +1,6 @@
 # FreightIQ
 
-**AI-powered supply chain disruption detection, shipment risk scoring, and automated alerts**
+**AI-powered supply chain disruption detection, shipment risk scoring, and automated alerts — built entirely on local, on-premise AI via Ollama. No shipment data ever leaves your network.**
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white) ![LangChain](https://img.shields.io/badge/LangChain-0.2+-1C3C3C?logo=langchain&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-Local_AI-white?logo=ollama) ![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-orange) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?logo=streamlit&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
@@ -9,6 +9,8 @@
 ## Table of Contents
 
 - [What It Does](#what-it-does)
+- [Why Local AI?](#why-local-ai)
+- [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
@@ -41,7 +43,30 @@ FreightIQ is an agentic AI system that:
 > Demo prompt: *"Port of Rotterdam strike reported — which of our shipments are at risk and what should we do?"*
 > The system detects the event, retrieves related context, scores affected shipments, and outputs a ranked action list — automatically.
 
-![FreightIQ Dashboard](docs/images/dashboard_screenshot.png)
+---
+
+## Why Local AI?
+
+Most AI-powered logistics tools route your shipment data through third-party LLM APIs. FreightIQ doesn't.
+
+By running inference fully on-premise via [Ollama](https://ollama.com), FreightIQ ensures:
+
+- 🔒 **No data leaves your network** — shipment routes, cargo values, and carrier details stay internal
+- ✅ **Compliance-friendly** — suitable for enterprises with strict data residency or regulatory requirements
+- 💸 **No per-token API costs** — inference runs locally at no marginal cost after setup
+- 🚫 **No vendor lock-in** — swap the underlying model without changing your application code
+
+> For teams that prefer a hosted LLM, FreightIQ supports a simple swap — see [Cloud Deployment](#cloud-deployment-hosted-llm-variant).
+
+---
+
+## Screenshots
+
+| Live Alert Feed | Shipment Risk Table | Natural Language Query |
+|---|---|---|
+| ![alerts](docs/images/alerts.png) | ![risk](docs/images/risk_table.png) | ![query](docs/images/query.png) |
+
+> No live demo hosted yet — see [Quick Start](#quick-start) to run locally in ~5 minutes.
 
 ---
 
@@ -433,15 +458,6 @@ python scripts/generate_data.py --shipments 100 --disruptions 50 --output data/s
 
 ## Deployment
 
-### Deployment Notes for Local AI
-
-> [!WARNING]
-> Because FreightIQ relies on a 4.7GB local LLM (`qwen2.5:7b-instruct`) via Ollama, it cannot be run purely on the free tiers of services like Render or Hugging Face Spaces (which typically provide 1-2GB of RAM).
->
-> To deploy this application to the cloud, you will need either:
-> 1. A VPS or cloud instance with at least 8GB of RAM and/or a dedicated GPU.
-> 2. To point the application to an external hosted LLM API (by updating the `llm_client.py` and environment configuration) if you prefer not to host the model yourself.
-
 ### Docker (local)
 
 ```bash
@@ -452,6 +468,30 @@ Services started:
 - **FastAPI backend:** `http://localhost:8000`
 - **Streamlit dashboard:** `http://localhost:8501`
 - **ChromaDB:** persistent volume at `./data/chroma`
+
+---
+
+### Cloud Deployment (hosted LLM variant)
+
+> [!WARNING]
+> Because FreightIQ relies on a 4.7GB local LLM (`qwen2.5:7b-instruct`) via Ollama, it cannot be run purely on the free tiers of services like Render or Hugging Face Spaces (which typically provide 1–2GB of RAM).
+>
+> **Option 1:** Deploy to a VPS or cloud instance with at least 8GB RAM and/or a dedicated GPU (e.g. a $12/mo Hetzner CPX31 or equivalent).
+>
+> **Option 2:** Swap Ollama for a hosted LLM provider by updating `llm_client.py`:
+
+```python
+# Replace OllamaLLM with any LangChain-compatible provider
+# Example: Anthropic Claude (fast, low-cost for this use case)
+from langchain_anthropic import ChatAnthropic
+llm = ChatAnthropic(model="claude-haiku-4-5")
+
+# Or OpenAI
+from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(model="gpt-4o-mini")
+```
+
+> Once updated, the FastAPI + Streamlit services can be deployed to Render or Railway on their free tiers without a GPU.
 
 ---
 
@@ -537,9 +577,9 @@ This system directly addresses three of the most costly problems in supply chain
 
 💬 **Slow dispute resolution** — natural language querying means any team member can interrogate the system without writing SQL or waiting for a data analyst.
 
-🔒 **Data Security & Compliance** — by using local, on-premise AI models via Ollama, proprietary supply chain data remains strictly within your enterprise network, mitigating third-party API exposure risks.
+🔒 **Data security and compliance** — fully local AI inference means proprietary supply chain data never touches a third-party API. This matters for enterprises operating under data residency requirements or sector-specific regulations.
 
-> *Typical ROI: A 5% reduction in delayed shipments on a portfolio of 500 monthly shipments, at $200 average re-handling cost, saves **$5,000/month**.*
+> *Indicative ROI: A logistics operation handling 500 shipments/month could offset the cost of a single re-routed or delayed shipment by catching disruptions earlier. Actual savings depend on carrier contracts, cargo type, and route complexity.*
 
 ---
 
@@ -563,8 +603,7 @@ Built by **Rajan Mehta** as a portfolio project demonstrating end-to-end AI engi
 
 **Skills demonstrated:** LangChain · LangGraph · ChromaDB · XGBoost · FastAPI · Streamlit · Python · Docker · Prompt engineering · Feature engineering
 
-<!-- Add your links below -->
-<!-- 🔗 [Portfolio](https://your-portfolio.com) · [LinkedIn](https://linkedin.com/in/your-profile) · [Twitter](https://twitter.com/your-handle) -->
+🔗 [Portfolio](https://your-portfolio.com) · [LinkedIn](https://linkedin.com/in/your-profile)
 
 ---
 
