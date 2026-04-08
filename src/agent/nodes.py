@@ -1,10 +1,11 @@
 """
 LangGraph agent node functions for the FreightIQ disruption detection pipeline.
 
-Three nodes:
-  1. detect_node  — parse raw feeds into structured DisruptionEvent objects
-  2. retrieve_node — pull relevant context from the RAG vector store
-  3. recommend_node — generate actionable alerts using LLM + risk scores
+Four nodes:
+  1. detect_node    — parse raw feeds into structured DisruptionEvent objects
+  2. retrieve_node  — pull relevant context from the RAG vector store
+  3. score_node     — score shipments using the XGBoost risk model
+  4. recommend_node — generate actionable alerts using LLM + risk scores
 """
 
 from __future__ import annotations

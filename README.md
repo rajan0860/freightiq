@@ -80,7 +80,8 @@ flowchart TB
     subgraph Agent["LangGraph Agent"]
         DETECT["Node 1: Detect\n(new events)"]
         RETRIEVE["Node 2: Retrieve\n(RAG context)"]
-        RECOMMEND["Node 3: Recommend\n(actions + alerts)"]
+        SCORE_NODE["Node 3: Score\n(XGBoost risk)"]
+        RECOMMEND["Node 4: Recommend\n(actions + alerts)"]
     end
 
     subgraph Scoring["XGBoost Risk Scorer"]
@@ -335,11 +336,13 @@ from src.ml.scorer import RiskScorer
 scorer = RiskScorer("data/models/xgboost_risk.json")
 
 result = scorer.score({
-    "route": "Shanghai → Rotterdam",
     "carrier_reliability": 0.72,
-    "days_to_delivery": 4,
     "region_disruption_count": 3,
-    "weather_severity": 0.6
+    "days_to_delivery": 4,
+    "weather_severity": 0.6,
+    "route_risk_score": 0.78,
+    "cargo_value_usd": 350_000,
+    "news_sentiment_score": -0.6,
 })
 # {"risk_score": 0.84, "risk_level": "HIGH",
 #  "explanation": "High disruption count in region (+0.31), low carrier reliability (+0.18)"}
