@@ -12,6 +12,7 @@
 - [Why Local AI?](#why-local-ai)
 - [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
+- [Live Demo Walkthrough](#live-demo-walkthrough)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
@@ -85,6 +86,30 @@ streamlit run src/dashboard/app.py
 > **Note:** The `streamlit run` command must be run from the project root so that relative imports and data paths resolve correctly.
 
 > See [Getting Started](#getting-started) for the full step-by-step walkthrough.
+
+---
+
+## Live Demo Walkthrough
+
+Once you have the system running locally, you can easily demonstrate FreightIQ using this short 5-minute scenario. Note that the system uses synthetic setup data, so you don't need real proprietary shipment data to test it.
+
+**Scenario: Port Strike Disruption**
+
+![FreightIQ Live Demo Walkthrough](docs/images/live_demo.webp)
+
+1. **Trigger Ingestion:** 
+   Run `python scripts/ingest_and_run.py`. This simulates the system fetching fresh data (the synthetic data generator seeds a "Rotterdam port workers strike").
+2. **Open the Dashboard:** 
+   Navigate to [http://localhost:8501](http://localhost:8501) and view the **Alerts Feed**.
+3. **View Live Alerts:**
+   Notice the new high-severity alert for the Rotterdam strike. The system continuously runs in the background and has already flagged specific shipments (e.g., `SHP-1042`).
+4. **Natural Language Query:**
+   Go to the **Query** tab and ask the AI directly: 
+   > *"We just got news about a strike in Rotterdam. Which of our high-value shipments are affected by this, and what is the recommended alternative route?"*
+5. **Observe the AI Response:**
+   FreightIQ will use the RAG pipeline to pull the exact context from the vector database and generate a precise response outlining affected shipments and recommending a reroute.
+6. **Check the ML Math:**
+   Navigate to the **Risk Table** tab, find an affected shipment, and click "View Details". Here you can see the XGBoost SHAP values, explaining exactly *why* the shipment was assigned its risk score (e.g., +0.31 for regional disruption count).
 
 ---
 

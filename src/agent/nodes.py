@@ -158,10 +158,15 @@ def recommend_node(state: AgentState) -> Dict[str, Any]:
         [e.model_dump() if hasattr(e, "model_dump") else e for e in events],
         indent=2,
     )
+    # Filter to only high/medium risk shipments, top 10 max, to reduce LLM prompt size
+    high_risk = [s for s in scored_shipments if getattr(s, "risk_level", "") in ["HIGH", "MEDIUM"]]
+    high_risk.sort(key=lambda x: getattr(x, "risk_score", 0.0), reverse=True)
+    top_shipments = high_risk[:10]
+
     shipments_text = json.dumps(
-        [s.model_dump() if hasattr(s, "model_dump") else s for s in scored_shipments],
+        [s.model_dump() if hasattr(s, "model_dump") else s for s in top_shipments],
         indent=2,
-    ) if scored_shipments else "No shipments scored."
+    ) if top_shipments else "No high/medium risk shipments found."
 
     llm = get_llm(temperature=0.0)
     prompt = RECOMMEND_PROMPT.format(
