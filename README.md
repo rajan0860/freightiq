@@ -95,7 +95,7 @@ Once you have the system running locally, you can easily demonstrate FreightIQ u
 
 **Scenario: Port Strike Disruption**
 
-![FreightIQ Live Demo Walkthrough](docs/images/live_demo.webp)
+*(Demo Video Placeholder - You can add a screen recording here)*
 
 1. **Trigger Ingestion:** 
    Run `python scripts/ingest_and_run.py`. This simulates the system fetching fresh data (the synthetic data generator seeds a "Rotterdam port workers strike").
