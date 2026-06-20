@@ -2,7 +2,7 @@
 
 **AI-powered supply chain disruption detection, shipment risk scoring, and automated alerts — built entirely on local, on-premise AI via Ollama. No shipment data ever leaves your network.**
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white) ![LangChain](https://img.shields.io/badge/LangChain-0.2+-1C3C3C?logo=langchain&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-Local_AI-white?logo=ollama) ![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-orange) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?logo=streamlit&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white) ![LangChain](https://img.shields.io/badge/LangChain-0.2+-1C3C3C?logo=langchain&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-Local_AI-white?logo=ollama) ![MCP](https://img.shields.io/badge/MCP-Standard-blue) ![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-orange) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?logo=streamlit&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
@@ -18,6 +18,7 @@
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Core Modules](#core-modules)
+- [Model Context Protocol (MCP)](#model-context-protocol-mcp)
 - [Model Training](#model-training)
 - [Deployment](#deployment)
 - [Configuration](#configuration)
@@ -185,8 +186,9 @@ flowchart TB
 | PDF ingestion | pdfplumber, PyPDFLoader |
 | Backend API | FastAPI, Uvicorn |
 | Frontend | Streamlit, Plotly |
+| Model Integration | Model Context Protocol (MCP) |
 | Deployment | Docker, Hugging Face Spaces, Render |
-| Dev tools | python-dotenv, pydantic, schedule |
+| Dev tools | python-dotenv, pydantic, schedule, mcp |
 
 ---
 
@@ -237,14 +239,16 @@ freightiq/
 │   │   │   └── query.py            # POST /query (NL interface)
 │   │   └── schemas.py              # Pydantic request/response models
 │   │
-│   └── dashboard/
-│       ├── app.py                  # Streamlit entry point
-│       ├── pages/
-│       │   ├── alerts.py           # Live alert feed view
-│       │   ├── risk_table.py       # Shipment risk table view
-│       │   ├── region_map.py       # Disruption map view
-│       │   └── query.py            # Natural language query view
-│       └── components/             # Reusable UI components
+│   ├── dashboard/
+│   │   ├── app.py                  # Streamlit entry point
+│   │   ├── pages/
+│   │   │   ├── alerts.py           # Live alert feed view
+│   │   │   ├── risk_table.py       # Shipment risk table view
+│   │   │   ├── region_map.py       # Disruption map view
+│   │   │   └── query.py            # Natural language query view
+│   │   └── components/             # Reusable UI components
+│   │
+│   └── mcp_server.py               # Model Context Protocol (MCP) server
 │
 ├── scripts/
 │   ├── generate_data.py            # Synthetic data generation (Faker)
@@ -254,7 +258,8 @@ freightiq/
 ├── tests/
 │   ├── test_rag.py
 │   ├── test_scorer.py
-│   └── test_agent.py
+│   ├── test_agent.py
+│   └── test_mcp.py
 │
 ├── notebooks/
 │   ├── 01_rag_exploration.ipynb    # RAG pipeline experiments
@@ -437,6 +442,58 @@ curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
   -d '{"question": "Which Asia-Europe routes are most at risk this week?"}'
 ```
+
+---
+
+## Model Context Protocol (MCP)
+
+FreightIQ includes a Model Context Protocol (MCP) server that lets any MCP-compliant AI client (like Claude Desktop or Cursor) interact directly with your supply chain risk data, run predictions, and fetch alerts.
+
+### Exposed MCP Features
+
+#### Tools
+- `query_supply_chain(question)`: Answer natural language questions about weather, news, and shipments using local RAG.
+- `get_alerts(run_pipeline)`: Retrieve shipment disruption alerts. Can trigger live news/weather updates.
+- `get_shipments_risk(limit)`: Score and retrieve all shipments ranked by risk (highest first).
+- `get_shipment_detail(shipment_id)`: Retrieve detail metrics and explanation (SHAP) for a specific shipment.
+- `run_pipeline()`: Run news and weather ingestion pipeline manually.
+
+#### Resources
+- `freightiq://alerts`: Returns raw JSON array of all active alerts.
+- `freightiq://shipments`: Summarizes total shipments, carriers, regions, and average cargo value.
+
+#### Prompts
+- `summarize_disruptions`: Instructions to help the LLM analyze alerts, run shipment-level detail tools, write a report, and draft client alert emails.
+
+### How to Run
+
+#### 1. Interactive Testing via MCP Inspector
+To run a local web debugger to inspect and execute the tools:
+```bash
+npx @modelcontextprotocol/inspector python3 -m src.mcp_server
+```
+Open the printed URL (usually `http://localhost:6274`) in your web browser.
+
+#### 2. Connecting to Claude Desktop
+Add the server configuration in your `claude_desktop_config.json` (on macOS, this is in `~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "freightiq": {
+      "command": "python3",
+      "args": ["-m", "src.mcp_server"],
+      "env": {
+        "NEWSAPI_KEY": "your_newsapi_key_here",
+        "OPENWEATHER_API_KEY": "your_openweather_key_here",
+        "OLLAMA_BASE_URL": "http://localhost:11434"
+      },
+      "cwd": "/Users/rajanmehta/Documents/MLProjectsGitHub/freightiq"
+    }
+  }
+}
+```
+Restart Claude Desktop to load the tools.
 
 ---
 
